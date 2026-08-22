@@ -1525,7 +1525,8 @@ with st.sidebar:
 
 st.markdown("""
 <div class="hero">
-  <h1>🦅 SB-BDI · Hệ hỗ trợ ra quyết định phân tích rào cản</h1>
+  <h1>🦅 SB-BDI · Hệ hỗ trợ ra quyết định phân tích rào cản doanh nghiệp | Decision support system for analyzing business barriers
+</h1>
   <p>Chỉ ra rào cản nào là <b>nguyên nhân gốc</b>, rào cản nào chỉ là <b>triệu chứng</b>,
   và nên <b>xử lý theo thứ tự nào</b> để nguồn lực bỏ ra tạo hiệu ứng lan toả lớn nhất.</p>
   <span class="badge">Best-Worst Method</span>

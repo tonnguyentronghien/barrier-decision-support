@@ -10,21 +10,17 @@ Tac gia framework : Ton Nguyen Trong Hien
 ORCID             : https://orcid.org/0000-0002-6970-0799
 
 Chay:  streamlit run app.py
-Can:   streamlit, numpy, pandas, scipy, plotly, openpyxl
+Can:   streamlit, numpy, pandas, scipy, plotly
+       (openpyxl chi can neu muon TAI LEN file .xlsx; khong bat buoc de chay app)
 ================================================================================
 
 MUC LUC
   PHAN A. ENGINE THUAT TOAN
-    A0. Hang so
-    A1. BWM (Best-Worst Method, dang tuyen tinh)
-    A2. DEMATEL
-    A3. ISM (ma tran kha dat, phan tang Warfield, MICMAC)
-    A4. CSI, Causal Structure Index
-    A5. SBOA, Secretary Bird Optimization Algorithm
-    A6. Pipeline tong
-    A7. Du lieu mau (12 rao can lua huu co DBSCL)
-    A8. Sinh tinh huong demo ngau nhien
-    A9. Phan tich / nhin nhan ket qua tu dong
+    A0. Hang so                      A5. SBOA, Secretary Bird Optimization
+    A1. BWM (Linear Best-Worst)      A6. Pipeline tong
+    A2. DEMATEL                      A7. Du lieu mau (12 rao can DBSCL)
+    A3. ISM va MICMAC                A8. Sinh tinh huong demo ngau nhien
+    A4. CSI, Causal Structure Index  A9. Phan tich ket qua tu dong
   PHAN B. TRUC QUAN HOA
     B1. Ban do nhan qua DEMATEL      B5. Heatmap va bieu do cot
     B2. So do phan tang ISM (DOT)    B6. So do quy trinh framework
@@ -41,6 +37,7 @@ from __future__ import annotations
 
 import io
 import math
+import zipfile
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -1791,6 +1788,9 @@ with tab1:
                 )
                 st.success(f"Đã nạp {nn} rào cản từ file.")
                 st.rerun()
+            except ImportError:
+                st.error("Máy chủ chưa cài gói đọc Excel. Hãy lưu file sang định dạng CSV "
+                         "rồi tải lên lại, hoặc thêm dòng `openpyxl>=3.1` vào requirements.txt.")
             except Exception as e:
                 st.error(f"Không đọc được file: {e}")
 
@@ -1993,6 +1993,9 @@ Có thể nhập số thập phân nếu đây là giá trị trung bình của 
                     st.session_state["Z"] = Zu
                     st.success("Đã nạp ma trận.")
                     st.rerun()
+            except ImportError:
+                st.error("Máy chủ chưa cài gói đọc Excel. Hãy lưu file sang định dạng CSV "
+                         "rồi tải lên lại, hoặc thêm dòng `openpyxl>=3.1` vào requirements.txt.")
             except Exception as e:
                 st.error(f"Không đọc được file: {e}")
     with cC:
@@ -2366,23 +2369,42 @@ Là **chỉ báo kết quả** để đo hiệu quả can thiệp.
                                                       "Cường độ T"]).round(4),
                          hide_index=True, use_container_width=True, height=300)
 
-            buf = io.BytesIO()
-            with pd.ExcelWriter(buf, engine="openpyxl") as xl:
-                summary.to_excel(xl, sheet_name="Tong hop", index=False)
-                pd.DataFrame(dm["T"], index=codes, columns=codes).to_excel(
-                    xl, sheet_name="Ma tran T")
-                pd.DataFrame(ism_r["reach"], index=codes, columns=codes).to_excel(
-                    xl, sheet_name="Kha dat")
-                pd.DataFrame(pairs, columns=["Tu", "Den", "T"]).to_excel(
-                    xl, sheet_name="Quan he", index=False)
-                pd.DataFrame({"Chi so": ["alpha*", "CSI", "So mui ten", "So tang ISM", "S"],
-                              "Gia tri": [sb["alpha"], sb["CSI"], ism_r["n_arrows"],
-                                          ism_r["n_levels"], res["ctx"].S]}
-                             ).to_excel(xl, sheet_name="Tham so", index=False)
-            st.download_button("⬇️ Tải toàn bộ kết quả (Excel)", buf.getvalue(),
-                               "ket_qua_SB-BDI.xlsx",
-                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                               type="primary")
+            # ---------- Xuất kết quả ----------
+            # Dùng CSV nén trong ZIP thay vì .xlsx: chỉ cần thư viện chuẩn của Python,
+            # không phụ thuộc openpyxl nên không bao giờ lỗi khi triển khai lên máy chủ.
+            def _csv(df, index=False):
+                return df.to_csv(index=index).encode("utf-8-sig")   # BOM để Excel đọc đúng tiếng Việt
+
+            df_params = pd.DataFrame({
+                "Chi so": ["Nguong alpha*", "CSI", "So mui ten giu lai",
+                           "So tang ISM", "Tu so co dinh S", "So rao can"],
+                "Gia tri": [round(sb["alpha"], 6), round(sb["CSI"], 6), ism_r["n_arrows"],
+                            ism_r["n_levels"], round(res["ctx"].S, 6), n],
+            })
+            df_pairs = pd.DataFrame(pairs, columns=["Tu (nguyen nhan)",
+                                                    "Den (chiu tac dong)", "Cuong do T"]).round(4)
+
+            zbuf = io.BytesIO()
+            with zipfile.ZipFile(zbuf, "w", zipfile.ZIP_DEFLATED) as zf:
+                zf.writestr("1_tong_hop.csv", _csv(summary))
+                zf.writestr("2_tham_so.csv", _csv(df_params))
+                zf.writestr("3_quan_he_giu_lai.csv", _csv(df_pairs))
+                zf.writestr("4_ma_tran_quan_he_tong_T.csv",
+                            _csv(pd.DataFrame(dm["T"].round(4), index=codes, columns=codes), True))
+                zf.writestr("5_ma_tran_kha_dat.csv",
+                            _csv(pd.DataFrame(ism_r["reach"], index=codes, columns=codes), True))
+                zf.writestr("6_ma_tran_anh_huong_truc_tiep_Z.csv",
+                            _csv(pd.DataFrame(dm["Z"], index=codes, columns=codes), True))
+
+            d1, d2 = st.columns(2)
+            d1.download_button("⬇️ Tải toàn bộ kết quả (ZIP nhiều file CSV)",
+                               zbuf.getvalue(), "ket_qua_SB-BDI.zip", "application/zip",
+                               type="primary", use_container_width=True)
+            d2.download_button("⬇️ Chỉ tải bảng tổng hợp (CSV)",
+                               _csv(summary), "tong_hop_SB-BDI.csv", "text/csv",
+                               use_container_width=True)
+            st.caption("File CSV có sẵn dấu BOM nên mở bằng Excel hiển thị đúng tiếng Việt. "
+                       "Trong Excel có thể gộp các file lại thành nhiều sheet nếu cần.")
 
         # ---------- Khuyến nghị ----------
         with r5:

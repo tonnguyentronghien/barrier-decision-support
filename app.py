@@ -1,33 +1,39 @@
 """
 ================================================================================
-SB-BDI  ·  HỆ HỖ TRỢ RA QUYẾT ĐỊNH PHÂN TÍCH RÀO CẢN   (file đơn — app.py)
-Secretary Bird – Barrier Dependency Interpretation
+SB-BDI  ·  HE HO TRO RA QUYET DINH PHAN TICH RAO CAN   (file don - app.py)
+Secretary Bird, Barrier Dependency Interpretation
 --------------------------------------------------------------------------------
-Framework tích hợp BWM + DEMATEL + ISM với ngưỡng cắt alpha nội sinh, được tối ưu
-bằng Secretary Bird Optimization Algorithm (SBOA) trên chỉ số CSI.
+Framework tich hop BWM + DEMATEL + ISM voi nguong cat alpha noi sinh, duoc toi uu
+bang Secretary Bird Optimization Algorithm (SBOA) tren chi so CSI.
 
-Tác giả framework : Tôn Nguyễn Trọng Hiển
+Tac gia framework : Ton Nguyen Trong Hien
 ORCID             : https://orcid.org/0000-0002-6970-0799
 
-Chạy:  streamlit run app.py
-Cần:   streamlit, numpy, pandas, scipy, plotly, openpyxl
+Chay:  streamlit run app.py
+Can:   streamlit, numpy, pandas, scipy, plotly, openpyxl
 ================================================================================
 
-MỤC LỤC
-  PHẦN A — ENGINE THUẬT TOÁN
-    A0. Hằng số
-    A1. BWM (Best-Worst Method, dạng tuyến tính)
+MUC LUC
+  PHAN A. ENGINE THUAT TOAN
+    A0. Hang so
+    A1. BWM (Best-Worst Method, dang tuyen tinh)
     A2. DEMATEL
-    A3. ISM (ma trận khả đạt, phân tầng Warfield, MICMAC)
-    A4. CSI — Causal Structure Index
-    A5. SBOA — Secretary Bird Optimization Algorithm
-    A6. Pipeline tổng
-    A7. Dữ liệu mẫu (12 rào cản lúa hữu cơ ĐBSCL)
-  PHẦN B — TRỰC QUAN HOÁ
-    B1. Bản đồ nhân quả DEMATEL      B4. Landscape CSI & hội tụ
-    B2. Sơ đồ phân tầng ISM (DOT)    B5. Heatmap & biểu đồ cột
-    B3. MICMAC                       B6. Sơ đồ quy trình framework
-  PHẦN C — GIAO DIỆN STREAMLIT
+    A3. ISM (ma tran kha dat, phan tang Warfield, MICMAC)
+    A4. CSI, Causal Structure Index
+    A5. SBOA, Secretary Bird Optimization Algorithm
+    A6. Pipeline tong
+    A7. Du lieu mau (12 rao can lua huu co DBSCL)
+    A8. Sinh tinh huong demo ngau nhien
+    A9. Phan tich / nhin nhan ket qua tu dong
+  PHAN B. TRUC QUAN HOA
+    B1. Ban do nhan qua DEMATEL      B5. Heatmap va bieu do cot
+    B2. So do phan tang ISM (DOT)    B6. So do quy trinh framework
+    B3. MICMAC                       B7. So do quy trinh rut gon
+    B4. Landscape CSI va hoi tu
+  PHAN C. GIAO DIEN STREAMLIT
+    Tab 0. Gioi thieu      Tab 3. DEMATEL
+    Tab 1. Cau hinh        Tab 4. Toi uu nguong alpha
+    Tab 2. BWM             Tab 5. Ket qua va dien giai
 ================================================================================
 """
 
@@ -47,9 +53,7 @@ from scipy.optimize import linprog
 
 # ##############################################################################
 # ##############################################################################
-##                                                                            ##
-##                     PHẦN A  —  ENGINE THUẬT TOÁN SB-BDI                    ##
-##                                                                            ##
+##                     PHAN A.  ENGINE THUAT TOAN SB-BDI                      ##
 # ##############################################################################
 # ##############################################################################
 
@@ -671,11 +675,295 @@ DEMO_WEIGHTS = np.array([0.062, 0.067, 0.022, 0.082, 0.078, 0.073,
                          0.212, 0.076, 0.085, 0.093, 0.071, 0.079])
 
 
+# ==============================================================================
+# 8. SINH TINH HUONG DEMO NGAU NHIEN
+# ==============================================================================
+
+DEMO_SCENARIOS: List[Dict] = [
+    {
+        "title": "Rào cản chuyển đổi số của doanh nghiệp sản xuất",
+        "barriers": [
+            ("TC1", "Ngân sách đầu tư công nghệ hạn chế", "Tài chính"),
+            ("TC2", "Khó chứng minh hiệu quả đầu tư", "Tài chính"),
+            ("NL1", "Thiếu nhân sự có kỹ năng số", "Nhân lực"),
+            ("NL2", "Nhân viên phản ứng với thay đổi", "Nhân lực"),
+            ("NL3", "Lãnh đạo thiếu cam kết dài hạn", "Nhân lực"),
+            ("QT1", "Quy trình nội bộ chưa chuẩn hoá", "Quy trình"),
+            ("QT2", "Dữ liệu phân mảnh giữa các phòng ban", "Quy trình"),
+            ("QT3", "Thiếu lộ trình chuyển đổi rõ ràng", "Quy trình"),
+            ("CN1", "Hệ thống cũ khó tích hợp", "Công nghệ"),
+            ("CN2", "Lo ngại an toàn thông tin", "Công nghệ"),
+            ("CN3", "Phụ thuộc nhà cung cấp bên ngoài", "Công nghệ"),
+        ],
+    },
+    {
+        "title": "Rào cản triển khai ESG trong chuỗi cung ứng",
+        "barriers": [
+            ("CP1", "Chi phí tuân thủ tăng cao", "Chi phí"),
+            ("CP2", "Khó chuyển chi phí sang giá bán", "Chi phí"),
+            ("TT1", "Khách hàng chưa sẵn sàng trả thêm", "Thị trường"),
+            ("TT2", "Thiếu áp lực từ đối thủ cạnh tranh", "Thị trường"),
+            ("CS1", "Quy định pháp lý chưa rõ ràng", "Chính sách"),
+            ("CS2", "Thiếu ưu đãi cho doanh nghiệp tiên phong", "Chính sách"),
+            ("CS3", "Tiêu chuẩn báo cáo không thống nhất", "Chính sách"),
+            ("NCU1", "Nhà cung cấp cấp 2 không đáp ứng", "Nhà cung ứng"),
+            ("NCU2", "Khó truy xuất nguồn gốc nguyên liệu", "Nhà cung ứng"),
+            ("NL1", "Thiếu chuyên gia đánh giá nội bộ", "Nhân lực"),
+        ],
+    },
+    {
+        "title": "Rào cản mở rộng thị trường xuất khẩu",
+        "barriers": [
+            ("TC1", "Vốn lưu động không đủ cho đơn hàng lớn", "Tài chính"),
+            ("TC2", "Rủi ro tỷ giá và thanh toán quốc tế", "Tài chính"),
+            ("SP1", "Chất lượng sản phẩm chưa ổn định", "Sản phẩm"),
+            ("SP2", "Bao bì chưa đạt chuẩn thị trường đích", "Sản phẩm"),
+            ("SP3", "Năng lực sản xuất chưa đủ quy mô", "Sản phẩm"),
+            ("TT1", "Thiếu kênh phân phối tại nước sở tại", "Thị trường"),
+            ("TT2", "Thương hiệu chưa được nhận diện", "Thị trường"),
+            ("PL1", "Hàng rào kỹ thuật và kiểm dịch", "Pháp lý"),
+            ("PL2", "Thủ tục chứng nhận kéo dài", "Pháp lý"),
+            ("NL1", "Thiếu nhân sự am hiểu thị trường quốc tế", "Nhân lực"),
+            ("NL2", "Hạn chế năng lực ngoại ngữ và đàm phán", "Nhân lực"),
+        ],
+    },
+    {
+        "title": "Rào cản giữ chân nhân sự chất lượng cao",
+        "barriers": [
+            ("TN1", "Mức lương chưa cạnh tranh thị trường", "Thu nhập"),
+            ("TN2", "Chính sách thưởng thiếu minh bạch", "Thu nhập"),
+            ("PT1", "Lộ trình thăng tiến không rõ ràng", "Phát triển"),
+            ("PT2", "Ít cơ hội đào tạo chuyên sâu", "Phát triển"),
+            ("PT3", "Công việc lặp lại, thiếu thử thách", "Phát triển"),
+            ("MT1", "Văn hoá nội bộ thiếu gắn kết", "Môi trường"),
+            ("MT2", "Áp lực công việc kéo dài", "Môi trường"),
+            ("QL1", "Quản lý trực tiếp thiếu kỹ năng dẫn dắt", "Quản lý"),
+            ("QL2", "Phản hồi hiệu suất không kịp thời", "Quản lý"),
+            ("QL3", "Phân công công việc chồng chéo", "Quản lý"),
+        ],
+    },
+]
+
+
+def random_case(seed: Optional[int] = None, n: Optional[int] = None) -> Dict:
+    """
+    Sinh mot tinh huong demo ngau nhien nhung CO CAU TRUC:
+    gan cho moi rao can mot "do sau" tiem an, rao can sau hon anh huong
+    manh len rao can nong hon. Nho vay ISM cho ra cau truc nhieu tang
+    thay vi mot dam quan he ngau nhien khong doc duoc.
+    """
+    rng = np.random.default_rng(seed)
+
+    sc = DEMO_SCENARIOS[int(rng.integers(len(DEMO_SCENARIOS)))]
+    pool = list(sc["barriers"])
+    n_max = len(pool)
+    n = int(n) if n else int(rng.integers(min(8, n_max), n_max + 1))
+    n = max(4, min(n, n_max))
+
+    pick = sorted(rng.choice(n_max, size=n, replace=False))
+    chosen = [pool[i] for i in pick]
+    codes = [c for c, _, _ in chosen]
+    names = [nm for _, nm, _ in chosen]
+    dims = [d for _, _, d in chosen]
+
+    # --- do sau tiem an: tang 0 la ngon (he qua), tang cao la goc ---
+    n_layers = int(rng.integers(3, 5))
+    depth = np.zeros(n, dtype=int)
+    order = rng.permutation(n)
+    depth[order[0]] = 0                       # it nhat mot he qua
+    depth[order[1]] = n_layers - 1            # it nhat mot nguyen nhan goc
+    for k in order[2:]:
+        depth[k] = int(rng.integers(0, n_layers))
+
+    Z = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                continue
+            gap = depth[i] - depth[j]
+            if gap > 0:                        # i sau hon j  ->  i thuc day j
+                base = 3.5 - 0.7 * (gap - 1)
+                Z[i, j] = base + rng.normal(0, 0.35)
+            elif gap == 0:
+                Z[i, j] = rng.uniform(0.3, 1.4)
+            else:                              # phan hoi nguoc, yeu
+                Z[i, j] = rng.uniform(0.0, 0.7)
+    Z = np.clip(np.round(Z, 1), 0.0, 4.0)
+    np.fill_diagonal(Z, 0.0)
+
+    # --- trong so: rao can cang sau, cang de duoc danh gia quan trong ---
+    alpha_dir = 1.0 + 1.6 * depth + rng.random(n)
+    weights = rng.dirichlet(alpha_dir * 2.5)
+
+    # --- sinh BO/WO nhat quan voi trong so de tab BWM cung co du lieu ---
+    B = int(np.argmax(weights))
+    W = int(np.argmin(weights))
+    n_exp = int(rng.integers(4, 8))
+    BO = np.ones((n_exp, n))
+    WO = np.ones((n_exp, n))
+    for e in range(n_exp):
+        for j in range(n):
+            BO[e, j] = np.clip(round(weights[B] / max(weights[j], 1e-6)
+                                     + rng.normal(0, 0.45)), 1, 9)
+            WO[e, j] = np.clip(round(weights[j] / max(weights[W], 1e-6)
+                                     + rng.normal(0, 0.45)), 1, 9)
+        BO[e, B] = 1.0
+        WO[e, W] = 1.0
+
+    return {
+        "title": sc["title"], "codes": codes, "names": names, "dims": dims,
+        "Z": Z, "weights": weights, "BO": BO, "WO": WO,
+        "best_idx": B, "worst_idx": W,
+    }
+
+
+# ==============================================================================
+# 9. PHAN TICH / NHIN NHAN KET QUA (sinh nhan dinh tu dong)
+# ==============================================================================
+
+def interpret_results(res: Dict, codes: Sequence[str], names: Sequence[str],
+                      weights: np.ndarray) -> List[Dict]:
+    """
+    Doc ket qua va sinh cac nhan dinh bang ngon ngu quan ly.
+    Moi phan tu: {"tone": good|warn|info|key, "title": str, "text": str}
+    tone dung de to mau the tren giao dien.
+    """
+    dm, sb, ism = res["dematel"], res["sbo"], res["ism"]
+    prom, rel = dm["prominence"], dm["relation"]
+    levels, part, mm = ism["levels"], ism["partition"], ism["micmac"]
+    n = len(codes)
+    out: List[Dict] = []
+
+    top_lvl = max(levels)
+    roots = levels[top_lvl]
+    top_imp = int(np.argmax(prom))
+    top_w = int(np.argmax(weights))
+    density = ism["n_arrows"] / max(n * (n - 1), 1)
+
+    def nm(i):
+        return f"{codes[i]} ({names[i]})"
+
+    # 1. Do sau cau truc
+    if ism["n_levels"] <= 1:
+        out.append({"tone": "warn", "title": "Cấu trúc phẳng, chưa tách được lớp",
+                    "text": "Toàn bộ rào cản nằm cùng một tầng, nghĩa là dữ liệu đầu vào "
+                            "chưa đủ phân biệt để chỉ ra cái nào gây ra cái nào. Nên rà "
+                            "lại ma trận ảnh hưởng: có thể chuyên gia chấm quá đều tay."})
+    elif ism["n_levels"] == 2:
+        out.append({"tone": "info", "title": "Cấu trúc hai tầng, phân tách còn nông",
+                    "text": "Hệ thống chỉ tách được thành nhóm gây ra và nhóm chịu ảnh "
+                            "hưởng, chưa thấy chuỗi truyền dẫn trung gian. Kết luận vẫn "
+                            "dùng được nhưng khuyến nghị can thiệp sẽ kém chi tiết."})
+    else:
+        out.append({"tone": "good", "title": f"Cấu trúc {ism['n_levels']} tầng, đủ sâu để hành động",
+                    "text": f"Hệ thống tách được thành {ism['n_levels']} tầng rõ ràng, cho phép "
+                            "xác định thứ tự can thiệp thay vì xử lý dàn trải. Đây là mức "
+                            "phân giải tốt cho việc lập kế hoạch theo giai đoạn."})
+
+    # 2. So nguyen nhan goc
+    if len(roots) == 1:
+        out.append({"tone": "key", "title": "Chỉ có một điểm khởi phát duy nhất",
+                    "text": f"{nm(roots[0])} là gốc của toàn bộ chuỗi rào cản. Đây là tin tốt "
+                            "cho việc phân bổ nguồn lực: chỉ cần một mũi can thiệp tập trung "
+                            "thay vì nhiều chương trình song song."})
+    elif len(roots) <= 3:
+        out.append({"tone": "key", "title": f"Có {len(roots)} điểm khởi phát song song",
+                    "text": "Các rào cản " + ", ".join(codes[i] for i in roots) +
+                            " cùng nằm ở tầng đáy và độc lập với nhau. Cần xử lý đồng thời; "
+                            "giải quyết một cái mà bỏ các cái còn lại thì chuỗi vẫn tái diễn."})
+    else:
+        out.append({"tone": "warn", "title": f"Có tới {len(roots)} nguyên nhân gốc, nguồn lực sẽ bị phân tán",
+                    "text": "Số điểm khởi phát nhiều cho thấy hệ thống rào cản chưa hội tụ. "
+                            "Nên chia thành nhiều giai đoạn và ưu tiên các gốc có trọng số cao nhất "
+                            "trước, thay vì cố xử lý tất cả cùng lúc."})
+
+    # 3. Quan trong nhat vs nguyen nhan goc
+    if top_imp in roots:
+        out.append({"tone": "good", "title": "Rào cản nổi bật nhất cũng chính là gốc",
+                    "text": f"{nm(top_imp)} vừa có mức độ liên quan cao nhất trong hệ thống vừa "
+                            "nằm ở tầng đáy. Ưu tiên đầu tư vào đây là lựa chọn an toàn và "
+                            "được cả hai góc phân tích ủng hộ."})
+    else:
+        out.append({"tone": "key", "title": "Cái nổi bật nhất KHÔNG phải cái cần xử lý trước",
+                    "text": f"{nm(top_imp)} có mức độ liên quan cao nhất nhưng chỉ nằm ở tầng "
+                            f"{part[top_imp]}, tức phần lớn là hệ quả. Nếu dồn nguồn lực vào đây "
+                            f"sẽ tốn kém mà vấn đề tái diễn, vì gốc thật sự là "
+                            f"{', '.join(nm(i) for i in roots)}. Đây thường là điểm mà xếp hạng "
+                            "thông thường bỏ sót."})
+
+    # 4. Trong so cao nhat nam o dau
+    if top_w not in roots and part[top_w] < top_lvl:
+        out.append({"tone": "warn", "title": "Đánh giá của chuyên gia lệch khỏi cấu trúc thật",
+                    "text": f"Chuyên gia cho {nm(top_w)} trọng số cao nhất "
+                            f"({weights[top_w]:.3f}) nhưng rào cản này nằm ở tầng {part[top_w]}, "
+                            "không phải tầng gốc. Nên xem đây là cảnh báo: cảm nhận về mức độ "
+                            "quan trọng đang bám vào triệu chứng dễ thấy hơn là căn nguyên."})
+
+    # 5. Mat do quan he
+    if density > 0.45:
+        out.append({"tone": "warn", "title": "Mạng lưới quan hệ khá dày",
+                    "text": f"Giữ lại {ism['n_arrows']} quan hệ trên tổng {n*(n-1)} khả năng "
+                            f"({density*100:.0f}%). Mọi thứ liên quan tới mọi thứ, nên sơ đồ "
+                            "sẽ khó dùng để thuyết trình. Cân nhắc thu hẹp phạm vi phân tích."})
+    elif density < 0.08:
+        out.append({"tone": "info", "title": "Mạng lưới quan hệ thưa, kết luận rất tập trung",
+                    "text": f"Chỉ {ism['n_arrows']} quan hệ được giữ lại. Bức tranh gọn và dễ "
+                            "truyền đạt, nhưng cần kiểm tra xem có rào cản nào bị tách rời "
+                            "khỏi hệ thống hay không."})
+    else:
+        out.append({"tone": "good", "title": "Mật độ quan hệ ở mức dễ diễn giải",
+                    "text": f"{ism['n_arrows']} quan hệ được giữ lại trên tổng {n*(n-1)} khả năng. "
+                            "Đủ để thấy chuỗi nhân quả mà không rối, phù hợp để đưa vào báo cáo."})
+
+    # 6. Nhom lien ket bat on
+    linkage = [i for i in range(n) if mm["classification"][i].startswith("Liên kết")]
+    if linkage:
+        out.append({"tone": "warn", "title": f"{len(linkage)} rào cản thuộc nhóm bất ổn",
+                    "text": "Các rào cản " + ", ".join(codes[i] for i in linkage) +
+                            " vừa tác động mạnh vừa chịu tác động mạnh. Mọi thay đổi ở đây "
+                            "đều dội ngược lại hệ thống, nên cần thí điểm quy mô nhỏ trước "
+                            "khi triển khai rộng."})
+
+    # 7. Rao can co the loai khoi pham vi
+    isolated = [i for i in range(n)
+                if mm["driving_power"][i] <= 1 and mm["dependence"][i] <= 1]
+    if isolated:
+        out.append({"tone": "info", "title": "Có rào cản gần như tách rời hệ thống",
+                    "text": "Các rào cản " + ", ".join(codes[i] for i in isolated) +
+                            " gần như không nối với phần còn lại. Có thể xử lý độc lập bằng "
+                            "biện pháp riêng, hoặc đưa ra khỏi phạm vi phân tích để tập trung "
+                            "nguồn lực."})
+
+    # 8. Can bang nguyen nhan / he qua
+    n_cause = int((rel > 0).sum())
+    if n_cause == 0 or n_cause == n:
+        out.append({"tone": "warn", "title": "Không tách được nhóm nguyên nhân và hệ quả",
+                    "text": "Toàn bộ rào cản rơi về cùng một phía. Thường do ma trận ảnh hưởng "
+                            "được chấm quá đối xứng. Nên phỏng vấn lại chuyên gia với câu hỏi "
+                            "rõ hơn về chiều tác động."})
+
+    # 9. Do tin cay cua nghiem
+    if sb["CSI"] >= 0.85:
+        out.append({"tone": "good", "title": "Điểm cắt tối ưu rất rõ ràng",
+                    "text": f"Chỉ số chất lượng cấu trúc đạt {sb['CSI']:.3f} trên thang 1. "
+                            "Thuật toán tìm được một điểm cắt nổi trội hẳn so với các lựa chọn "
+                            "khác, nghĩa là cấu trúc thu được ổn định, không phải kết quả may rủi."})
+    elif sb["CSI"] >= 0.6:
+        out.append({"tone": "info", "title": "Điểm cắt tối ưu ở mức chấp nhận được",
+                    "text": f"Chỉ số chất lượng cấu trúc đạt {sb['CSI']:.3f}. Kết quả dùng được, "
+                            "nhưng nên thử thay đổi nhẹ dữ liệu đầu vào để xem cấu trúc có giữ "
+                            "nguyên hay không trước khi ra quyết định lớn."})
+    else:
+        out.append({"tone": "warn", "title": "Điểm cắt tối ưu chưa nổi trội",
+                    "text": f"Chỉ số chất lượng cấu trúc chỉ đạt {sb['CSI']:.3f}. Dữ liệu đầu vào "
+                            "chưa cho phép tách bạch rõ cấu trúc. Nên bổ sung chuyên gia hoặc "
+                            "làm rõ định nghĩa từng rào cản rồi chạy lại."})
+
+    return out
+
 # ##############################################################################
 # ##############################################################################
-##                                                                            ##
-##                       PHẦN B  —  TRỰC QUAN HOÁ                             ##
-##                                                                            ##
+##                           PHAN B.  TRUC QUAN HOA                           ##
 # ##############################################################################
 # ##############################################################################
 
@@ -702,7 +990,7 @@ def causal_map(codes: Sequence[str], names: Sequence[str],
                prominence: np.ndarray, relation: np.ndarray,
                T: np.ndarray, alpha: float,
                show_arrows: bool = True) -> go.Figure:
-    """Bản đồ nhân quả DEMATEL: trục X = độ nổi bật (R+C), trục Y = quan hệ (R−C).
+    """Bản đồ nhân quả DEMATEL: trục X = độ nổi bật (R+C), trục Y = quan hệ (R-C).
     Mũi tên = quan hệ ảnh hưởng vượt ngưỡng alpha."""
     n = len(codes)
     x, y = np.asarray(prominence, float), np.asarray(relation, float)
@@ -754,8 +1042,8 @@ def causal_map(codes: Sequence[str], names: Sequence[str],
 
     # --- Điểm barrier ---
     is_cause = y > 0
-    for mask, color, label in [(is_cause, C_CAUSE, "Nguyên nhân (R−C > 0)"),
-                               (~is_cause, C_EFFECT, "Hệ quả (R−C < 0)")]:
+    for mask, color, label in [(is_cause, C_CAUSE, "Nguyên nhân (R-C > 0)"),
+                               (~is_cause, C_EFFECT, "Hệ quả (R-C < 0)")]:
         if not mask.any():
             continue
         idx = np.where(mask)[0]
@@ -768,9 +1056,9 @@ def causal_map(codes: Sequence[str], names: Sequence[str],
                         opacity=0.92),
             name=label,
             customdata=np.column_stack([[names[i] for i in idx], x[idx], y[idx]]),
-            hovertemplate="<b>%{text}</b> – %{customdata[0]}<br>"
+            hovertemplate="<b>%{text}</b> · %{customdata[0]}<br>"
                           "Độ nổi bật R+C = %{customdata[1]:.3f}<br>"
-                          "Quan hệ R−C = %{customdata[2]:.3f}<extra></extra>",
+                          "Quan hệ R-C = %{customdata[2]:.3f}<extra></extra>",
         ))
 
     fig.update_layout(
@@ -779,7 +1067,7 @@ def causal_map(codes: Sequence[str], names: Sequence[str],
                    x=0.01, xanchor="left"),
         xaxis=dict(title="Độ nổi bật  R + C  (mức độ quan trọng)", gridcolor=C_GRID,
                    range=[x0, x1], zeroline=False),
-        yaxis=dict(title="Quan hệ  R − C  (nguyên nhân ↔ hệ quả)", gridcolor=C_GRID,
+        yaxis=dict(title="Quan hệ  R - C  (nguyên nhân ↔ hệ quả)", gridcolor=C_GRID,
                    range=[y0, y1], zeroline=False),
         height=620, legend=dict(orientation="h", y=1.02, x=1, xanchor="right", yanchor="bottom"),
         **PLOT_LAYOUT,
@@ -818,7 +1106,7 @@ def ism_dot(codes: Sequence[str], names: Sequence[str],
         role = "Hệ quả / triệu chứng" if lvl == 1 else (
             "NGUYÊN NHÂN GỐC" if lvl == n_levels else "Trung gian")
         lines.append(f'  subgraph cluster_L{lvl} {{')
-        lines.append(f'    label="Tầng {lvl} — {role}"; fontname="Inter,Arial";'
+        lines.append(f'    label="Tầng {lvl}: {role}"; fontname="Inter,Arial";'
                      f' fontsize=11; fontcolor="#555"; color="#d8dce3"; style="rounded";')
         lines.append("    rank=same;")
         for i in levels[lvl]:
@@ -874,7 +1162,7 @@ def micmac_plot(codes: Sequence[str], names: Sequence[str], mm: Dict, n: int) ->
     for d, p in zip(dep, dp):
         k = (d, p)
         c = seen.get(k, 0); seen[k] = c + 1
-        ang = c * 2.399963            # góc vàng — trải đều điểm trùng toạ độ
+        ang = c * 2.399963            # goc vang, trai deu điểm trùng toạ độ
         rad = 0.20 * np.sqrt(c)
         xs.append(d + rad * np.cos(ang))
         ys.append(p + rad * np.sin(ang))
@@ -884,7 +1172,7 @@ def micmac_plot(codes: Sequence[str], names: Sequence[str], mm: Dict, n: int) ->
         textfont=dict(size=12), marker=dict(size=15, color="#1d3557",
                                             line=dict(width=2, color="white")),
         customdata=np.column_stack([names, dp, dep, mm["classification"]]),
-        hovertemplate="<b>%{text}</b> – %{customdata[0]}<br>Sức dẫn dắt = %{customdata[1]}"
+        hovertemplate="<b>%{text}</b> · %{customdata[0]}<br>Sức dẫn dắt = %{customdata[1]}"
                       "<br>Mức phụ thuộc = %{customdata[2]}<br>Nhóm: %{customdata[3]}<extra></extra>",
         showlegend=False,
     ))
@@ -978,7 +1266,7 @@ def weights_bar(codes: Sequence[str], names: Sequence[str], w: np.ndarray) -> go
         marker=dict(color=w[order], colorscale="Teal", line=dict(width=0)),
         text=[f"{v:.4f}" for v in w[order]], textposition="outside",
         customdata=[names[i] for i in order],
-        hovertemplate="<b>%{y}</b> – %{customdata}<br>Trọng số = %{x:.4f}<extra></extra>",
+        hovertemplate="<b>%{y}</b> · %{customdata}<br>Trọng số = %{x:.4f}<extra></extra>",
     ))
     fig.update_layout(
         title=dict(text="<b>Trọng số BWM của các rào cản</b>", x=0.01, xanchor="left"),
@@ -998,7 +1286,7 @@ def prominence_bar(codes: Sequence[str], prominence: np.ndarray,
         marker=dict(color=colors), text=[f"{prominence[i]:.3f}" for i in order],
         textposition="outside",
         customdata=[f"{relation[i]:+.3f}" for i in order],
-        hovertemplate="<b>%{y}</b><br>R+C = %{x:.3f}<br>R−C = %{customdata}<extra></extra>",
+        hovertemplate="<b>%{y}</b><br>R+C = %{x:.3f}<br>R-C = %{customdata}<extra></extra>",
     ))
     fig.update_layout(
         title=dict(text="<b>Xếp hạng mức độ quan trọng (R+C)</b><br>"
@@ -1030,7 +1318,7 @@ digraph SBBDI {
     Z  [label="Ma trận quan hệ\\ntrực tiếp Z", fillcolor="#264653"];
   }
   BWM [label="② BWM tuyến tính\\nmin ξ  →  trọng số w", fillcolor="#2E86AB"];
-  DEM [label="③ DEMATEL\\nT = N(I−N)⁻¹ · (n·wⱼ)", fillcolor="#0EAD69"];
+  DEM [label="③ DEMATEL\\nT = N(I-N)⁻¹ · (n·wⱼ)", fillcolor="#0EAD69"];
   CSI [label="④ CSI(α) = √(C̃S · L̃)\\nchỉ số cấu trúc nhân quả", fillcolor="#E8730C"];
   SBO [label="⑤ Secretary Bird\\ntối ưu → α*", fillcolor="#C73E1D"];
   ISM [label="⑥ ISM + MICMAC\\nphân tầng, nguyên nhân gốc", fillcolor="#7209B7"];
@@ -1040,11 +1328,30 @@ digraph SBBDI {
 """
 
 
+# ==============================================================================
+# 7. SO DO QUY TRINH RUT GON (ngon ngu quan ly)
+# ==============================================================================
+
+SIMPLE_FLOW_DOT = """
+digraph FLOW {
+  rankdir=TB; bgcolor="transparent"; nodesep=0.25; ranksep=0.38;
+  node [shape=box, style="rounded,filled", fontname="Inter,Arial", fontsize=11,
+        penwidth=0, fontcolor="white", margin="0.24,0.14", width=2.6];
+  edge [color="#98a0ae", penwidth=1.5, arrowsize=0.75];
+
+  S1 [label="1. Liệt kê rào cản", fillcolor="#264653"];
+  S2 [label="2. Chuyên gia chấm điểm\\nmức quan trọng", fillcolor="#2E86AB"];
+  S3 [label="3. Chuyên gia chấm\\nquan hệ ảnh hưởng", fillcolor="#0EAD69"];
+  S4 [label="4. Hệ thống dựng\\nbản đồ nhân quả", fillcolor="#E8730C"];
+  S5 [label="5. Xếp tầng và chỉ ra\\nthứ tự can thiệp", fillcolor="#C73E1D"];
+
+  S1 -> S2 -> S3 -> S4 -> S5;
+}
+"""
+
 # ##############################################################################
 # ##############################################################################
-##                                                                            ##
-##                     PHẦN C  —  GIAO DIỆN STREAMLIT                         ##
-##                                                                            ##
+##                        PHAN C.  GIAO DIEN STREAMLIT                        ##
 # ##############################################################################
 # ##############################################################################
 
@@ -1117,6 +1424,29 @@ def load_demo():
     )
 
 
+def load_random_case(iters: int = 60, pop: int = 20):
+    """Sinh một tình huống doanh nghiệp ngẫu nhiên rồi chạy trọn bộ phân tích."""
+    import random as _random
+    sd = _random.randint(1, 999_999)
+    c = random_case(seed=sd)
+    n = len(c["codes"])
+    st.session_state.update(
+        n=n, codes=c["codes"], names=c["names"], dims=c["dims"],
+        Z=c["Z"], BO=c["BO"], WO=c["WO"], weights=c["weights"],
+        best_idx=c["best_idx"], worst_idx=c["worst_idx"],
+        results=None, bwm_out=None, demo_loaded=False,
+        random_title=c["title"], random_seed=sd,
+    )
+    try:
+        st.session_state["bwm_out"] = run_bwm(
+            c["BO"], c["WO"], c["best_idx"], c["worst_idx"])
+    except Exception:
+        st.session_state["bwm_out"] = None
+    st.session_state["results"] = run_full_pipeline(
+        c["Z"], c["weights"], iterations=iters, pop_size=pop, seed=sd)
+    return c["title"], n
+
+
 def blank_setup(n: int):
     st.session_state.update(
         n=n,
@@ -1143,22 +1473,34 @@ def S(k):
     return st.session_state[k]
 
 
+def S_get(k, default=None):
+    return st.session_state.get(k, default)
+
+
 # ==============================================================================
 # SIDEBAR
 # ==============================================================================
 
 with st.sidebar:
     st.markdown("### 🦅 SB-BDI")
-    st.caption("Secretary Bird – Barrier Dependency Interpretation")
+    st.caption("Secretary Bird, Barrier Dependency Interpretation")
 
     st.markdown("---")
     st.markdown("**Dữ liệu**")
+    if st.button("🎲 Chạy thử tình huống ngẫu nhiên", use_container_width=True,
+                 type="primary",
+                 help="Tự dựng một tình huống doanh nghiệp và chạy trọn bộ phân tích "
+                      "để xem đầu ra trông ra sao"):
+        with st.spinner("Đang dựng tình huống và phân tích..."):
+            title, nn = load_random_case()
+        st.success(f"Đã tạo: {title} ({nn} rào cản). Mở tab **Kết quả & Diễn giải**.")
     if st.button("📥 Nạp bộ dữ liệu mẫu", use_container_width=True,
                  help="Case study: 12 rào cản sản xuất lúa hữu cơ ở ĐBSCL"):
         load_demo()
         st.success("Đã nạp dữ liệu mẫu (12 rào cản).")
     if st.button("🗑️ Xoá & bắt đầu lại", use_container_width=True):
         blank_setup(6)
+        st.session_state.pop("random_title", None)
         st.rerun()
 
     st.markdown("---")
@@ -1175,6 +1517,8 @@ with st.sidebar:
         "<a href='https://orcid.org/0000-0002-6970-0799' target='_blank'>ORCID: 0000-0002-6970-0799</a>"
         "</div>", unsafe_allow_html=True)
 
+    if S_get("random_title"):
+        st.caption(f"🎲 Tình huống demo: **{S_get('random_title')}**")
     st.caption(f"Đang cấu hình: **{S('n')} rào cản**")
 
 
@@ -1184,9 +1528,9 @@ with st.sidebar:
 
 st.markdown("""
 <div class="hero">
-  <h1>🦅 SB-BDI — Hệ hỗ trợ ra quyết định phân tích rào cản</h1>
-  <p>Tích hợp <b>BWM</b> · <b>DEMATEL</b> · <b>ISM</b> với ngưỡng cắt α được <b>nội sinh hoá</b>
-  và tối ưu bằng thuật toán <b>Secretary Bird</b> trên chỉ số cấu trúc nhân quả CSI.</p>
+  <h1>🦅 SB-BDI · Hệ hỗ trợ ra quyết định phân tích rào cản</h1>
+  <p>Chỉ ra rào cản nào là <b>nguyên nhân gốc</b>, rào cản nào chỉ là <b>triệu chứng</b>,
+  và nên <b>xử lý theo thứ tự nào</b> để nguồn lực bỏ ra tạo hiệu ứng lan toả lớn nhất.</p>
   <span class="badge">Best-Worst Method</span>
   <span class="badge">DEMATEL</span>
   <span class="badge">ISM &amp; MICMAC</span>
@@ -1205,76 +1549,137 @@ tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
 
 
 # ==============================================================================
-# TAB 0 — GIỚI THIỆU
+# TAB 0. GIOI THIEU
 # ==============================================================================
 
 with tab0:
-    c1, c2 = st.columns([1.45, 1])
+    c1, c2 = st.columns([1.5, 1])
 
     with c1:
-        st.markdown("## SB-BDI là gì?")
+        st.markdown("## Công cụ này giúp bạn điều gì?")
         st.markdown("""
-**SB-BDI** (*Secretary Bird – Barrier Dependency Interpretation*) là một framework hỗ trợ
-ra quyết định đa tiêu chí dùng để **phân tích cấu trúc hệ thống rào cản**: xác định rào cản nào
-quan trọng nhất, rào cản nào chỉ là *triệu chứng*, và đâu là **nguyên nhân gốc** cần can thiệp trước.
+Tổ chức nào cũng có danh sách vấn đề tồn đọng dài hơn nguồn lực để xử lý. Câu hỏi khó
+không phải *"chúng ta đang vướng những gì"*, vì cái đó ai cũng liệt kê được. Câu hỏi khó là
+**bỏ tiền và thời gian vào đâu trước thì cả hệ thống mới chuyển động**.
 
-Framework kết hợp ba phương pháp kinh điển thành một chuỗi liền mạch:
+Đây chính là chỗ hay ra quyết định sai. Vấn đề gây ồn ào nhất, được nhắc nhiều nhất trong
+các cuộc họp, thường lại là **hệ quả** của một nguyên nhân sâu hơn nằm ở chỗ khác. Xử lý nó
+thì tốn kém mà vài tháng sau vấn đề quay lại y như cũ.
 
-1. **BWM** (*Best-Worst Method*, Rezaei 2015/2016) — xác định **trọng số tầm quan trọng** của từng rào cản
-   từ đánh giá chuyên gia, với số phép so sánh ít hơn AHP và độ nhất quán cao hơn.
-2. **DEMATEL** — chuyển ma trận ảnh hưởng trực tiếp thành **ma trận quan hệ tổng** `T = N(I−N)⁻¹`,
-   tách nhóm *nguyên nhân* và nhóm *hệ quả*.
-3. **ISM** — phân rã hệ thống thành **cấu trúc phân tầng** có hướng, từ hệ quả ở đỉnh đến nguyên nhân gốc ở đáy.
+**SB-BDI trả lời ba câu hỏi mà một bảng xếp hạng thông thường không trả lời được:**
+
+1. Rào cản nào **thực sự quan trọng** với hệ thống, không phải cái nào được nói to nhất.
+2. Rào cản nào chỉ là **triệu chứng** của rào cản khác, tức là xử lý sẽ không dứt điểm.
+3. Nên can thiệp theo **thứ tự nào** để một đồng bỏ ra tạo hiệu ứng lan toả lớn nhất.
         """)
 
-        st.markdown("## Vì sao cần SB-BDI?")
+        st.markdown("### Bốn lợi ích cụ thể")
+        b1, b2 = st.columns(2)
+        benefits = [
+            ("🎯", "Đúng thứ tự, không dàn trải",
+             "Thay vì chia đều ngân sách cho mười vấn đề, bạn biết vấn đề nào là gốc và "
+             "xử lý nó sẽ kéo theo bao nhiêu vấn đề khác tự giảm."),
+            ("🧭", "Loại bỏ cảm tính khỏi cuộc họp",
+             "Ý kiến chuyên gia được chấm điểm có kiểm định. Người đánh giá thiếu nhất quán "
+             "sẽ bị phát hiện ngay, thay vì tranh luận ai đúng ai sai."),
+            ("🔁", "Cùng dữ liệu cho cùng kết quả",
+             "Không có tham số nào do người phân tích tự chọn. Ai chạy lại cũng ra đúng "
+             "kết quả đó, nên kết luận không phụ thuộc vào người làm báo cáo."),
+            ("📑", "Bằng chứng để bảo vệ quyết định",
+             "Bạn có số liệu, chỉ số kiểm định và sơ đồ trực quan để trình bày trước ban "
+             "lãnh đạo hoặc hội đồng, thay vì chỉ nói *theo kinh nghiệm của tôi*."),
+        ]
+        for col, (icon, title, body) in zip([b1, b2, b1, b2], benefits):
+            col.markdown(
+                f"<div class='card' style='margin-bottom:.8rem'><h4>{icon} {title}</h4>"
+                f"<p>{body}</p></div>", unsafe_allow_html=True)
+
+        st.markdown("### So với cách làm thường gặp")
         st.markdown("""
-Điểm nghẽn lớn nhất khi ghép DEMATEL với ISM là **ngưỡng cắt α** — giá trị quyết định
-quan hệ nào trong ma trận `T` được giữ lại làm mũi tên trong sơ đồ phân tầng.
-
-Thực tiễn nghiên cứu vẫn chọn α theo cách **ngoại sinh và mang tính chủ quan**: lấy trung bình,
-trung bình + độ lệch chuẩn, phân vị 75%, hoặc để chuyên gia ấn định. Hệ quả:
-
-- α lệch một chút → **số tầng ISM thay đổi**, nguyên nhân gốc có thể biến mất hoặc đảo vị trí;
-- α quá thấp → giữ gần như mọi quan hệ, ISM sụp còn **một tầng duy nhất** (vô nghĩa về cấu trúc);
-- α quá cao → đồ thị rời rạc, mất liên kết nhân quả;
-- kết luận chính sách vì thế **không tái lập được** giữa các nghiên cứu.
+| Tình huống | Cách làm phổ biến hiện nay | Khi dùng SB-BDI |
+|---|---|---|
+| Chọn vấn đề ưu tiên | Họp bàn rồi biểu quyết, ai lập luận mạnh hơn thì ý kiến đó thắng | Chấm điểm theo phương pháp có kiểm định nhất quán, phát hiện được đánh giá mâu thuẫn |
+| Tìm nguyên nhân gốc | Dựa vào kinh nghiệm và trực giác của vài người | Suy ra từ cấu trúc quan hệ giữa toàn bộ rào cản, không ai áp đặt |
+| Vẽ sơ đồ quan hệ | Tự chọn tay mức lọc, mỗi người vẽ ra một sơ đồ khác nhau | Thuật toán tự tìm mức lọc tốt nhất, cùng dữ liệu luôn cho cùng sơ đồ |
+| Phân bổ nguồn lực | Chia đều hoặc ưu tiên nơi kêu to nhất | Theo thứ tự tầng, xử lý gốc trước để tạo hiệu ứng lan toả |
+| Bảo vệ kết luận | Khó phản biện vì không có căn cứ định lượng | Có chỉ số, bảng số liệu và sơ đồ kiểm chứng được |
         """)
 
+        st.markdown("### Vì sao kết quả đáng tin cậy")
         st.markdown("""
-<div class="keyfind blue">
-<b>Đóng góp cốt lõi của SB-BDI:</b> biến α từ một tham số do người phân tích áp đặt thành
-một <b>biến quyết định nội sinh</b>, được xác định bằng cách tối ưu một hàm mục tiêu
-<b>không có tham số tự do</b> — chỉ số <b>CSI</b>.
-</div>
-""", unsafe_allow_html=True)
-
-        st.markdown("### Chỉ số CSI — Causal Structure Index")
-        st.latex(r"\mathrm{CSI}(\alpha)=\sqrt{\widetilde{CS}(\alpha)\;\cdot\;\widetilde{L}(\alpha)}")
-        st.markdown(r"""
-trong đó:
-
-- $CS(\alpha) = \dfrac{S}{N_{\text{arrows}}(\alpha)}$ — **cường độ nhân quả**: mức phân tách
-  nguyên nhân/hệ quả đạt được trên mỗi mũi tên được giữ lại. Tử số
-  $S = \left|\overline{(R-C)}_{>0}\right| + \left|\overline{(R-C)}_{<0}\right|$ được **cố định**
-  từ ma trận `T` *chưa cắt ngưỡng*, nhằm tránh phụ thuộc vòng tròn vào chính α.
-- $L(\alpha)$ — **số tầng** của cấu trúc ISM, đại diện cho chiều sâu diễn giải.
-- Cả hai được chuẩn hoá về $[0,1]$; **trung bình nhân** đảm bảo *tính không thay thế*:
-  nếu một thành phần bằng 0 thì CSI bằng 0 — không thể "mua" chiều sâu bằng cách nhồi thêm mũi tên,
-  và ngược lại.
-- Ràng buộc khả thi: $N_{\text{arrows}}(\alpha) \ge n$ để đồ thị không bị rời rạc.
-
-Vì CSI là **hàm bậc thang, đa cực trị và không khả vi** theo α, thuật toán
-**Secretary Bird Optimization** (Fu và cộng sự, 2024) — mô phỏng chiến lược săn rắn của loài
-chim thư ký với 3 pha săn mồi và 2 chiến lược trốn thoát — được dùng để dò tìm α\*.
+- **Chất lượng đầu vào được kiểm tra, không nhận bừa.** Mỗi chuyên gia được tính một chỉ số
+  nhất quán. Nếu người đó chấm mâu thuẫn với chính mình, hệ thống báo ngay để bạn rà lại,
+  thay vì để dữ liệu xấu lọt vào kết quả cuối.
+- **Không có nút vặn nào để người phân tích "chỉnh" ra kết quả mong muốn.** Ở các phương pháp
+  tương tự, người làm phải tự chọn một mức lọc và mức đó quyết định luôn hình dạng kết luận.
+  SB-BDI để máy tự tìm mức lọc tối ưu, nên không thể vô tình hay cố ý lái kết quả.
+- **Tái lập được.** Cùng bộ dữ liệu, chạy bao nhiêu lần cũng ra cùng một cấu trúc. Đây là điều
+  kiện bắt buộc nếu kết quả dùng để trình hội đồng hoặc đưa vào báo cáo chính thức.
+- **Ba góc nhìn kiểm tra chéo nhau.** Mức độ quan trọng, chiều tác động, và vị trí trong chuỗi
+  nhân quả được tính bằng ba phương pháp riêng biệt. Khi cả ba cùng chỉ về một rào cản, độ tin
+  cậy của kết luận cao hơn hẳn so với chỉ dùng một bảng xếp hạng.
+- **Nền tảng đã được công bố khoa học.** Ba phương pháp thành phần đều là chuẩn mực học thuật
+  được dùng rộng rãi hàng chục năm, không phải công thức tự nghĩ ra.
         """)
+
+        st.markdown("### Bạn nhận được gì sau khi chạy")
+        st.markdown("""
+1. **Bảng xếp hạng** mức độ quan trọng của từng rào cản, kèm vai trò là nguyên nhân hay hệ quả.
+2. **Sơ đồ phân tầng** chỉ rõ đâu là nguyên nhân gốc, đâu là triệu chứng bề mặt.
+3. **Thứ tự can thiệp** theo từng giai đoạn, kèm nhận định về độ tin cậy của kết luận.
+4. **File Excel** đầy đủ số liệu để đưa vào báo cáo hoặc phụ lục.
+        """)
+
+        with st.expander("🔬 Dành cho người làm phân tích: chi tiết phương pháp"):
+            st.markdown(r"""
+**SB-BDI** (*Secretary Bird, Barrier Dependency Interpretation*) tích hợp ba phương pháp:
+
+1. **BWM** (*Best-Worst Method*, Rezaei 2015/2016) xác định trọng số tầm quan trọng, cần ít
+   phép so sánh hơn AHP và cho độ nhất quán cao hơn.
+2. **DEMATEL** chuyển ma trận ảnh hưởng trực tiếp thành ma trận quan hệ tổng
+   $T = N(I-N)^{-1}$, tách nhóm nguyên nhân và nhóm hệ quả.
+3. **ISM** phân rã hệ thống thành cấu trúc phân tầng có hướng.
+
+**Vấn đề kỹ thuật mà framework giải quyết.** Khi ghép DEMATEL với ISM, ngưỡng cắt $\alpha$
+quyết định quan hệ nào trong $T$ được giữ lại. Thực tiễn vẫn chọn $\alpha$ ngoại sinh
+(trung bình, trung bình cộng độ lệch chuẩn, phân vị 75%, hoặc do chuyên gia ấn định).
+Hệ quả: $\alpha$ lệch một chút thì số tầng thay đổi, nguyên nhân gốc có thể biến mất, và
+kết luận không tái lập được giữa các nghiên cứu.
+
+**Đóng góp cốt lõi.** Biến $\alpha$ thành biến quyết định nội sinh, xác định bằng cách cực
+đại một hàm mục tiêu không có tham số tự do:
+            """)
+            st.latex(r"\mathrm{CSI}(\alpha)=\sqrt{\widetilde{CS}(\alpha)\;\cdot\;\widetilde{L}(\alpha)}")
+            st.markdown(r"""
+- $CS(\alpha) = S / N_{\text{arrows}}(\alpha)$ là cường độ nhân quả đạt được trên mỗi mũi tên
+  giữ lại. Tử số $S = \left|\overline{(R-C)}_{>0}\right| + \left|\overline{(R-C)}_{<0}\right|$
+  được cố định từ ma trận $T$ chưa cắt ngưỡng, tránh phụ thuộc vòng tròn vào $\alpha$.
+- $L(\alpha)$ là số tầng của cấu trúc ISM, đại diện cho chiều sâu diễn giải.
+- Trung bình nhân bảo đảm tính không thay thế: một thành phần bằng 0 thì CSI bằng 0, nên không
+  thể đánh đổi chiều sâu lấy số lượng mũi tên hay ngược lại.
+- Ràng buộc khả thi: $N_{\text{arrows}}(\alpha) \ge n$ để đồ thị không rời rạc.
+
+Vì CSI là hàm bậc thang, đa cực trị và không khả vi theo $\alpha$, thuật toán
+**Secretary Bird Optimization** (Fu và cộng sự, 2024) với ba pha săn mồi và hai chiến lược
+trốn thoát được dùng để dò tìm $\alpha^*$.
+            """)
+            st.graphviz_chart(FRAMEWORK_DOT, use_container_width=True)
 
     with c2:
-        st.markdown("### Quy trình xử lý")
-        st.graphviz_chart(FRAMEWORK_DOT, use_container_width=True)
+        st.markdown("### Quy trình 5 bước")
+        st.graphviz_chart(SIMPLE_FLOW_DOT, use_container_width=True)
 
         st.markdown("""
 <div class="card" style="margin-top:1rem">
+<h4>⏱️ Cần chuẩn bị những gì</h4>
+<p><b>Danh sách rào cản:</b> thường 8 tới 15 mục, do nhóm chuyên môn thống nhất.<br><br>
+<b>Ý kiến chuyên gia:</b> từ 3 người trở lên. Mỗi người mất khoảng 20 phút để chấm hai bảng.<br><br>
+<b>Thời gian chạy:</b> dưới một phút. Phần lâu nhất là thu thập ý kiến, không phải tính toán.</p>
+</div>
+""", unsafe_allow_html=True)
+
+        st.markdown("""
+<div class="card" style="margin-top:.9rem">
 <h4>👤 Tác giả framework</h4>
 <p><b>Tôn Nguyễn Trọng Hiển</b><br>
 Người đề xuất và phát triển framework SB-BDI.<br><br>
@@ -1286,13 +1691,13 @@ ORCID: <a href="https://orcid.org/0000-0002-6970-0799" target="_blank">
         st.markdown("""
 <div class="card" style="margin-top:.9rem">
 <h4>📌 Kết quả trả về</h4>
-<p>• Trọng số BWM &amp; kiểm định nhất quán CR<br>
-• Ma trận quan hệ tổng T, nhóm nguyên nhân/hệ quả<br>
-• Ngưỡng α* tối ưu và không gian CSI(α)<br>
-• Bản đồ nhân quả DEMATEL có mũi tên<br>
-• Sơ đồ phân tầng ISM &amp; nguyên nhân gốc<br>
-• Phân loại MICMAC 4 nhóm<br>
-• Khuyến nghị thứ tự can thiệp</p>
+<p>• Xếp hạng mức độ quan trọng từng rào cản<br>
+• Bản đồ nguyên nhân và hệ quả<br>
+• Sơ đồ phân tầng, chỉ rõ nguyên nhân gốc<br>
+• Phân loại rào cản theo bốn nhóm hành động<br>
+• Nhận định tự động về độ tin cậy kết quả<br>
+• Thứ tự can thiệp theo giai đoạn<br>
+• File Excel đầy đủ để đưa vào báo cáo</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1301,23 +1706,26 @@ ORCID: <a href="https://orcid.org/0000-0002-6970-0799" target="_blank">
     g1, g2, g3 = st.columns(3)
     for col, (icon, title, body) in zip(
         [g1, g2, g3],
-        [("①", "Khai báo rào cản",
-          "Sang tab <b>Cấu hình rào cản</b>, chọn số lượng rào cản tuỳ ý và đặt mã, tên, nhóm."),
-         ("②", "Nhập đánh giá chuyên gia",
-          "Tab <b>BWM</b> để lấy trọng số, tab <b>DEMATEL</b> để nhập ma trận ảnh hưởng trực tiếp."),
-         ("③", "Chạy và đọc kết quả",
-          "Tab <b>Tối ưu ngưỡng α</b> chạy Secretary Bird, tab <b>Kết quả</b> hiển thị toàn bộ sơ đồ.")],
+        [("①", "Xem thử trước khi nhập liệu",
+          "Bấm <b>🎲 Chạy thử tình huống ngẫu nhiên</b> ở thanh bên. Hệ thống tự dựng một "
+          "tình huống doanh nghiệp và chạy trọn bộ phân tích để bạn xem đầu ra trông ra sao."),
+         ("②", "Khai báo rào cản của bạn",
+          "Sang tab <b>Cấu hình rào cản</b>, chọn số lượng và đặt tên cho từng rào cản, "
+          "hoặc nhập sẵn từ file Excel."),
+         ("③", "Nhập ý kiến rồi chạy",
+          "Tab <b>BWM</b> để chấm mức độ quan trọng, tab <b>DEMATEL</b> để chấm quan hệ ảnh "
+          "hưởng, rồi bấm chạy. Kết quả hiện ở tab cuối cùng.")],
     ):
         col.markdown(
             f"<div class='card'><h4>{icon} {title}</h4><p>{body}</p></div>",
             unsafe_allow_html=True)
 
-    st.info("💡 Chưa có dữ liệu? Bấm **📥 Nạp bộ dữ liệu mẫu** ở thanh bên để chạy thử "
-            "ngay với case study 12 rào cản sản xuất lúa hữu cơ vùng ĐBSCL.")
+    st.info("💡 Muốn xem ngay đầu ra mà chưa có dữ liệu? Bấm **🎲 Chạy thử tình huống ngẫu nhiên** "
+            "ở thanh bên, hoặc **📥 Nạp bộ dữ liệu mẫu** để dùng case study 12 rào cản có thật.")
 
 
 # ==============================================================================
-# TAB 1 — CẤU HÌNH RÀO CẢN
+# TAB 1. CAU HINH RAO CAN
 # ==============================================================================
 
 with tab1:
@@ -1404,7 +1812,7 @@ with tab1:
         )
         codes_new = [str(v).strip() or f"B{i+1}" for i, v in enumerate(edited["Mã"])]
         if len(set(codes_new)) != len(codes_new):
-            st.warning("⚠️ Có mã rào cản bị trùng — vui lòng đặt mã duy nhất cho mỗi rào cản.")
+            st.warning("⚠️ Có mã rào cản bị trùng, vui lòng đặt mã duy nhất cho mỗi rào cản.")
         st.session_state["codes"] = codes_new
         st.session_state["names"] = [str(v) for v in edited["Tên rào cản"]]
         st.session_state["dims"] = [str(v) for v in edited["Nhóm"]]
@@ -1414,11 +1822,11 @@ with tab1:
 
 
 # ==============================================================================
-# TAB 2 — BWM
+# TAB 2. BWM
 # ==============================================================================
 
 with tab2:
-    st.markdown("## ⚖️ BWM — Xác định trọng số rào cản")
+    st.markdown("## ⚖️ BWM: Xác định trọng số rào cản")
     codes = S("codes"); n = S("n")
 
     mode = st.radio(
@@ -1444,7 +1852,7 @@ with tab2:
     else:
         st.markdown("""
 Với mỗi chuyên gia, hãy xác định rào cản **quan trọng nhất (Best)** và **ít quan trọng nhất (Worst)**,
-sau đó chấm điểm theo thang **1–9** (Saaty):
+sau đó chấm điểm theo thang **1 tới 9** (Saaty):
 
 - **Best-to-Others (BO)**: mức độ Best quan trọng hơn từng rào cản còn lại. Ô của chính Best = **1**.
 - **Others-to-Worst (WO)**: mức độ từng rào cản quan trọng hơn Worst. Ô của chính Worst = **1**.
@@ -1456,11 +1864,11 @@ sau đó chấm điểm theo thang **1–9** (Saaty):
         with c2:
             b_idx = st.selectbox("Rào cản quan trọng nhất (Best)", range(n),
                                  index=min(S("best_idx"), n - 1),
-                                 format_func=lambda i: f"{codes[i]} — {S('names')[i]}")
+                                 format_func=lambda i: f"{codes[i]}: {S('names')[i]}")
         with c3:
             w_idx = st.selectbox("Rào cản ít quan trọng nhất (Worst)", range(n),
                                  index=min(S("worst_idx"), n - 1),
-                                 format_func=lambda i: f"{codes[i]} — {S('names')[i]}")
+                                 format_func=lambda i: f"{codes[i]}: {S('names')[i]}")
 
         st.session_state["best_idx"], st.session_state["worst_idx"] = int(b_idx), int(w_idx)
 
@@ -1483,11 +1891,11 @@ sau đó chấm điểm theo thang **1–9** (Saaty):
                                                        format="%d", width="small")
                       for c in codes}
 
-            st.markdown(f"##### Bảng BO — so sánh **{codes[b_idx]}** (Best) với các rào cản khác")
+            st.markdown(f"##### Bảng BO: so sánh **{codes[b_idx]}** (Best) với các rào cản khác")
             bo_ed = st.data_editor(pd.DataFrame(BO, columns=codes, index=idx),
                                    use_container_width=True, column_config=colcfg, key="ed_bo")
 
-            st.markdown(f"##### Bảng WO — so sánh các rào cản với **{codes[w_idx]}** (Worst)")
+            st.markdown(f"##### Bảng WO: so sánh các rào cản với **{codes[w_idx]}** (Worst)")
             wo_ed = st.data_editor(pd.DataFrame(WO, columns=codes, index=idx),
                                    use_container_width=True, column_config=colcfg, key="ed_wo")
 
@@ -1496,7 +1904,7 @@ sau đó chấm điểm theo thang **1–9** (Saaty):
             st.session_state["BO"], st.session_state["WO"] = BO, WO
 
             agg = st.selectbox("Cách tổng hợp ý kiến chuyên gia",
-                               ["Trung bình nhân (AIJ — khuyến nghị)", "Trung bình cộng"])
+                               ["Trung bình nhân (AIJ, khuyến nghị)", "Trung bình cộng"])
 
             if st.button("▶️ Tính trọng số BWM", type="primary"):
                 try:
@@ -1522,7 +1930,7 @@ sau đó chấm điểm theo thang **1–9** (Saaty):
             m3.metric("Số chuyên gia", f"{len(out['CR'])}")
 
             if not out["all_consistent"]:
-                st.warning("⚠️ Một số chuyên gia có CR ≥ 0,10 — nên rà soát lại các đánh giá "
+                st.warning("⚠️ Một số chuyên gia có CR ≥ 0,10, nên rà soát lại các đánh giá "
                            "thiếu nhất quán trước khi dùng kết quả.")
 
             cc1, cc2 = st.columns([1.3, 1])
@@ -1549,11 +1957,11 @@ sau đó chấm điểm theo thang **1–9** (Saaty):
 
 
 # ==============================================================================
-# TAB 3 — DEMATEL
+# TAB 3. DEMATEL
 # ==============================================================================
 
 with tab3:
-    st.markdown("## 🔗 DEMATEL — Ma trận quan hệ trực tiếp")
+    st.markdown("## 🔗 DEMATEL: Ma trận quan hệ trực tiếp")
     codes = S("codes"); n = S("n")
 
     st.markdown("""
@@ -1621,8 +2029,8 @@ Có thể nhập số thập phân nếu đây là giá trị trung bình của 
             k3.metric("Nhóm nguyên nhân", f"{int((dm['relation'] > 0).sum())} rào cản")
             k4.metric("Nhóm hệ quả", f"{int((dm['relation'] < 0).sum())} rào cản")
 
-            st.markdown("##### Ma trận quan hệ tổng **T = N(I−N)⁻¹ · (n·wⱼ)**")
-            st.caption("Trọng số BWM được nhân theo **cột** — ảnh hưởng đi vào một rào cản "
+            st.markdown("##### Ma trận quan hệ tổng **T = N(I-N)⁻¹ · (n·wⱼ)**")
+            st.caption("Trọng số BWM được nhân theo **cột**, tức ảnh hưởng đi vào một rào cản "
                        "được khuếch đại theo tầm quan trọng của chính rào cản đó.")
             st.plotly_chart(matrix_heatmap(dm["T"], codes, "Ma trận quan hệ tổng T"),
                             use_container_width=True)
@@ -1633,7 +2041,7 @@ Có thể nhập số thập phân nếu đây là giá trị trung bình của 
                 "R (phát)": np.round(dm["R"], 4),
                 "C (nhận)": np.round(dm["C"], 4),
                 "R+C (độ nổi bật)": np.round(dm["prominence"], 4),
-                "R−C (quan hệ)": np.round(dm["relation"], 4),
+                "R-C (quan hệ)": np.round(dm["relation"], 4),
                 "Nhóm": ["Nguyên nhân" if v > 0 else "Hệ quả" for v in dm["relation"]],
             }).sort_values("R+C (độ nổi bật)", ascending=False),
                 hide_index=True, use_container_width=True)
@@ -1642,11 +2050,11 @@ Có thể nhập số thập phân nếu đây là giá trị trung bình của 
 
 
 # ==============================================================================
-# TAB 4 — TỐI ƯU NGƯỠNG α
+# TAB 4. TOI UU NGUONG ALPHA
 # ==============================================================================
 
 with tab4:
-    st.markdown("## 🦅 Secretary Bird — Tối ưu ngưỡng α")
+    st.markdown("## 🦅 Secretary Bird: Tối ưu ngưỡng α")
     st.markdown("""
 Thuật toán dò tìm giá trị **α\\*** làm cực đại chỉ số **CSI(α)**, tức là điểm cân bằng tốt nhất
 giữa *cường độ nhân quả trên mỗi mũi tên* và *chiều sâu phân tầng của cấu trúc ISM*.
@@ -1654,7 +2062,7 @@ giữa *cường độ nhân quả trên mỗi mũi tên* và *chiều sâu phâ
 
     with st.expander("🔍 Cơ chế thuật toán Secretary Bird (Fu và cộng sự, 2024)"):
         st.markdown(r"""
-**Giai đoạn 1 — Săn mồi** (3 pha theo tiến độ $t/T$):
+**Giai đoạn 1, Săn mồi** (3 pha theo tiến độ $t/T$):
 
 | Pha | Điều kiện | Công thức cập nhật |
 |---|---|---|
@@ -1662,7 +2070,7 @@ giữa *cường độ nhân quả trên mỗi mũi tên* và *chiều sâu phâ
 | 2. Tiêu hao mồi | $T/3 \le t < 2T/3$ | $X_{new} = X_{best} + e^{-(t/T)^4}(R_B - 0.5)(X_{best} - X_i)$ |
 | 3. Tấn công | $t \ge 2T/3$ | $X_{new} = X_{best} + (1 - t/T)^{2t/T} X_i \cdot \text{Lévy}$ |
 
-**Giai đoạn 2 — Trốn kẻ thù** (chọn ngẫu nhiên 1 trong 2):
+**Giai đoạn 2, Trốn kẻ thù** (chọn ngẫu nhiên 1 trong 2):
 
 - **C₁ Nguỵ trang:** $X_{new} = X_{best} + (2R - 1)(1 - t/T)X_i$
 - **C₂ Bỏ chạy:** $X_{new} = X_i + R_2 (X_{rand} - K X_i)$, với $K \in \{1, 2\}$
@@ -1719,7 +2127,7 @@ giá trị ứng viên chính xác** (các phần tử phân biệt ngoài đư�
 
 
 # ==============================================================================
-# TAB 5 — KẾT QUẢ
+# TAB 5. KET QUA
 # ==============================================================================
 
 with tab5:
@@ -1739,6 +2147,11 @@ with tab5:
         surface_ids = levels[1]
 
         st.markdown("## 📊 Kết quả phân tích")
+        if S_get("random_title"):
+            st.info(f"🎲 **Tình huống demo tự sinh:** {S_get('random_title')} "
+                    f"(mã tình huống #{S_get('random_seed')}). Dữ liệu này do hệ thống dựng "
+                    "ngẫu nhiên để minh hoạ đầu ra, không phải số liệu khảo sát thật. "
+                    "Bấm lại nút ở thanh bên để xem một tình huống khác.")
 
         # ---------- Phát hiện chính ----------
         st.markdown("### 🎯 Những phát hiện chính")
@@ -1746,14 +2159,14 @@ with tab5:
         with f1:
             st.markdown(f"""
 <div class="keyfind">
-<b>🔴 Nguyên nhân gốc (Tầng {max(levels)} — đáy hệ thống)</b><br>
-{", ".join(f"<b>{codes[i]}</b> — {names[i]}" for i in root_ids)}<br>
+<b>🔴 Nguyên nhân gốc (Tầng {max(levels)}, đáy hệ thống)</b><br>
+{", ".join(f"<b>{codes[i]}</b>: {names[i]}" for i in root_ids)}<br>
 <span style="color:#6b7280;font-size:.9rem">Đây là điểm khởi phát của chuỗi nhân quả.
 Mọi can thiệp nên bắt đầu từ đây; xử lý các tầng trên chỉ giải quyết triệu chứng.</span>
 </div>
 <div class="keyfind blue">
 <b>⭐ Rào cản quan trọng nhất (R+C lớn nhất)</b><br>
-<b>{codes[top_imp]}</b> — {names[top_imp]} &nbsp;·&nbsp; R+C = {prom[top_imp]:.3f}<br>
+<b>{codes[top_imp]}</b>: {names[top_imp]} &nbsp;·&nbsp; R+C = {prom[top_imp]:.3f}<br>
 <span style="color:#6b7280;font-size:.9rem">Có mức độ tham gia vào hệ thống cao nhất
 (vừa gây vừa chịu ảnh hưởng), nhưng không đồng nghĩa là nguyên nhân gốc.</span>
 </div>
@@ -1761,13 +2174,13 @@ Mọi can thiệp nên bắt đầu từ đây; xử lý các tầng trên chỉ
         with f2:
             st.markdown(f"""
 <div class="keyfind green">
-<b>🔵 Tác nhân gây ảnh hưởng mạnh nhất (R−C lớn nhất)</b><br>
-<b>{codes[top_cause]}</b> — {names[top_cause]} &nbsp;·&nbsp; R−C = {rel[top_cause]:+.3f}
+<b>🔵 Tác nhân gây ảnh hưởng mạnh nhất (R-C lớn nhất)</b><br>
+<b>{codes[top_cause]}</b>: {names[top_cause]} &nbsp;·&nbsp; R-C = {rel[top_cause]:+.3f}
 </div>
 <div class="keyfind">
-<b>🎈 Rào cản mang tính triệu chứng nhất (R−C nhỏ nhất)</b><br>
-<b>{codes[top_effect]}</b> — {names[top_effect]} &nbsp;·&nbsp; R−C = {rel[top_effect]:+.3f}<br>
-<span style="color:#6b7280;font-size:.9rem">Chủ yếu là kết quả của các rào cản khác —
+<b>🎈 Rào cản mang tính triệu chứng nhất (R-C nhỏ nhất)</b><br>
+<b>{codes[top_effect]}</b>: {names[top_effect]} &nbsp;·&nbsp; R-C = {rel[top_effect]:+.3f}<br>
+<span style="color:#6b7280;font-size:.9rem">Chủ yếu là kết quả của các rào cản khác,
 tác động trực tiếp vào đây thường kém hiệu quả.</span>
 </div>
 """, unsafe_allow_html=True)
@@ -1781,9 +2194,57 @@ tác động trực tiếp vào đây thường kém hiệu quả.</span>
 
         st.markdown("---")
 
-        r1, r2, r3, r4, r5 = st.tabs([
-            "🗺️ Bản đồ nhân quả", "🏗️ Cấu trúc phân tầng ISM",
+        r0, r1, r2, r3, r4, r5 = st.tabs([
+            "🔎 Nhận định", "🗺️ Bản đồ nhân quả", "🏗️ Cấu trúc phân tầng ISM",
             "🎛️ MICMAC", "📋 Bảng chi tiết", "💡 Khuyến nghị"])
+
+        # ---------- Nhận định tự động ----------
+        with r0:
+            st.markdown("### Đọc kết quả này như thế nào")
+            st.caption("Các nhận định dưới đây được sinh tự động từ cấu trúc vừa tính ra. "
+                       "Chúng nêu cả điểm mạnh lẫn điểm cần thận trọng của kết quả.")
+
+            insights = interpret_results(res, codes, names, S("weights"))
+            tone_style = {
+                "good": ("#0EAD69", "#f0fbf6", "✅"),
+                "key":  ("#2E86AB", "#f1f8fc", "🎯"),
+                "warn": ("#E8730C", "#fff7ee", "⚠️"),
+                "info": ("#6b7280", "#f7f8fa", "ℹ️"),
+            }
+            i1, i2 = st.columns(2)
+            for k, item in enumerate(insights):
+                color, bg, icon = tone_style.get(item["tone"], tone_style["info"])
+                (i1 if k % 2 == 0 else i2).markdown(f"""
+<div style="border-left:4px solid {color}; background:{bg}; padding:.9rem 1.15rem;
+            border-radius:0 10px 10px 0; margin-bottom:.75rem;">
+  <div style="font-weight:600; color:#12304a; margin-bottom:.3rem;">{icon} {item['title']}</div>
+  <div style="color:#4b5563; font-size:.93rem; line-height:1.6;">{item['text']}</div>
+</div>
+""", unsafe_allow_html=True)
+
+            st.markdown("---")
+            st.markdown("### Tóm tắt một đoạn để đưa vào báo cáo")
+            n_cause = int((rel > 0).sum())
+            density = ism_r["n_arrows"] / max(n * (n - 1), 1)
+            summary_txt = (
+                f"Phân tích {n} rào cản bằng framework SB-BDI cho thấy hệ thống có cấu trúc "
+                f"{ism_r['n_levels']} tầng với {ism_r['n_arrows']} quan hệ ảnh hưởng đáng kể "
+                f"(chiếm {density*100:.0f}% số quan hệ có thể có). Trong đó "
+                f"{n_cause} rào cản thuộc nhóm nguyên nhân và {n - n_cause} rào cản thuộc nhóm "
+                f"hệ quả. Nguyên nhân gốc của toàn hệ thống là "
+                f"{', '.join(f'{codes[i]} ({names[i]})' for i in root_ids)}, nằm ở tầng đáy. "
+                f"Rào cản có mức độ liên quan cao nhất là {codes[top_imp]} ({names[top_imp]}) "
+                f"với chỉ số nổi bật {prom[top_imp]:.3f}, thuộc tầng {part[top_imp]}. "
+                f"Chỉ số chất lượng cấu trúc đạt {sb['CSI']:.3f} trên thang 1, cho thấy điểm "
+                f"cắt được lựa chọn là "
+                + ("rõ ràng và ổn định" if sb['CSI'] >= 0.85 else
+                   "chấp nhận được" if sb['CSI'] >= 0.6 else "chưa thật nổi trội") +
+                f". Khuyến nghị tập trung nguồn lực vào tầng {max(levels)} trước, "
+                f"sử dụng {', '.join(codes[i] for i in surface_ids)} làm chỉ báo đo lường "
+                f"hiệu quả can thiệp."
+            )
+            st.text_area("Chọn toàn bộ rồi sao chép", summary_txt, height=190,
+                         label_visibility="collapsed")
 
         # ---------- Bản đồ nhân quả ----------
         with r1:
@@ -1794,11 +2255,11 @@ tác động trực tiếp vào đây thường kém hiệu quả.</span>
             st.markdown("""
 **Cách đọc biểu đồ**
 
-- **Trục ngang (R+C)** — độ nổi bật: rào cản càng nằm bên phải càng gắn kết chặt với toàn hệ thống.
-- **Trục dọc (R−C)** — vai trò nhân quả: **trên trục 0** là nhóm *nguyên nhân* (gây ảnh hưởng nhiều hơn chịu),
+- **Trục ngang (R+C)**, độ nổi bật: rào cản càng nằm bên phải càng gắn kết chặt với toàn hệ thống.
+- **Trục dọc (R-C)**, vai trò nhân quả: **trên trục 0** là nhóm *nguyên nhân* (gây ảnh hưởng nhiều hơn chịu),
   **dưới trục 0** là nhóm *hệ quả*.
-- **Góc phải trên — Tác nhân cốt lõi:** ưu tiên can thiệp cao nhất (vừa quan trọng vừa dẫn dắt).
-- **Góc phải dưới — Hệ quả cốt lõi:** chỉ số đo lường tốt để theo dõi tiến triển, không nên can thiệp trực tiếp.
+- **Góc phải trên, Tác nhân cốt lõi:** ưu tiên can thiệp cao nhất (vừa quan trọng vừa dẫn dắt).
+- **Góc phải dưới, Hệ quả cốt lõi:** chỉ số đo lường tốt để theo dõi tiến triển, không nên can thiệp trực tiếp.
             """)
             c1, c2 = st.columns(2)
             c1.plotly_chart(prominence_bar(codes, prom, rel), use_container_width=True)
@@ -1825,7 +2286,7 @@ tác động trực tiếp vào đây thường kém hiệu quả.</span>
                             else "🎈 **Hệ quả / triệu chứng**" if lvl == 1
                             else "🔗 **Trung gian**")
                     st.markdown(
-                        f"**Tầng {lvl}** — {role}\n\n"
+                        f"**Tầng {lvl}**: {role}\n\n"
                         + "\n".join(f"- `{codes[i]}` {names[i]}" for i in levels[lvl]))
                     st.markdown("")
 
@@ -1841,8 +2302,8 @@ tác động trực tiếp vào đây thường kém hiệu quả.</span>
         with r3:
             split_lbl = st.radio(
                 "Cách xác định đường chia 4 góc phần tư",
-                ["Thích ứng — trung điểm dải giá trị quan sát (khuyến nghị)",
-                 "Cổ điển — chia đôi tại n/2"],
+                ["Thích ứng, lấy trung điểm dải giá trị quan sát (khuyến nghị)",
+                 "Cổ điển, chia đôi tại n/2"],
                 horizontal=True, key="micmac_split")
             mode = "classic" if split_lbl.startswith("Cổ điển") else "adaptive"
             mm = micmac(ism_r["reach"], mode)
@@ -1857,16 +2318,16 @@ tác động trực tiếp vào đây thường kém hiệu quả.</span>
                 st.markdown("""
 #### Ý nghĩa 4 nhóm
 
-**I. Tự trị (Autonomous)** — sức dẫn dắt thấp, phụ thuộc thấp.
+**I. Tự trị (Autonomous)**: sức dẫn dắt thấp, phụ thuộc thấp.
 Gần như tách rời hệ thống, ưu tiên xử lý thấp.
 
-**II. Độc lập / Dẫn dắt (Independent)** — dẫn dắt mạnh, ít bị phụ thuộc.
-**Đòn bẩy chính sách mạnh nhất** — nên tập trung nguồn lực vào nhóm này.
+**II. Độc lập / Dẫn dắt (Independent)**: dẫn dắt mạnh, ít bị phụ thuộc.
+**Đòn bẩy chính sách mạnh nhất**, nên tập trung nguồn lực vào nhóm này.
 
-**III. Liên kết (Linkage)** — vừa dẫn dắt mạnh vừa phụ thuộc mạnh.
+**III. Liên kết (Linkage)**: vừa dẫn dắt mạnh vừa phụ thuộc mạnh.
 Bất ổn: mọi tác động vào nhóm này đều dội ngược lại. Cần theo dõi sát.
 
-**IV. Phụ thuộc (Dependent)** — chủ yếu chịu ảnh hưởng.
+**IV. Phụ thuộc (Dependent)**: chủ yếu chịu ảnh hưởng.
 Là **chỉ báo kết quả** để đo hiệu quả can thiệp.
                 """)
             st.dataframe(pd.DataFrame({
@@ -1886,7 +2347,7 @@ Là **chỉ báo kết quả** để đo hiệu quả can thiệp.
                 "R (phát)": np.round(dm["R"], 4),
                 "C (nhận)": np.round(dm["C"], 4),
                 "R+C": np.round(prom, 4),
-                "R−C": np.round(rel, 4),
+                "R-C": np.round(rel, 4),
                 "Vai trò": ["Nguyên nhân" if v > 0 else "Hệ quả" for v in rel],
                 "Tầng ISM": part,
                 "Sức dẫn dắt": mm["driving_power"],
@@ -1931,20 +2392,20 @@ Là **chỉ báo kết quả** để đo hiệu quả can thiệp.
             for order, lvl in enumerate(sorted(levels, reverse=True), start=1):
                 ids = levels[lvl]
                 if lvl == max(levels):
-                    tag, color = "Ưu tiên 1 — Can thiệp gốc", "#C73E1D"
+                    tag, color = "Ưu tiên 1: Can thiệp gốc", "#C73E1D"
                     note = ("Đây là điểm khởi phát của toàn bộ chuỗi rào cản. Nguồn lực đầu tư "
                             "vào tầng này tạo hiệu ứng lan toả xuống mọi tầng phía trên.")
                 elif lvl == 1:
-                    tag, color = f"Ưu tiên {order} — Theo dõi kết quả", "#3A86FF"
+                    tag, color = f"Ưu tiên {order}: Theo dõi kết quả", "#3A86FF"
                     note = ("Chủ yếu là hệ quả. Dùng làm chỉ báo đo lường hiệu quả của các can thiệp "
                             "ở tầng dưới, thay vì can thiệp trực tiếp.")
                 else:
-                    tag, color = f"Ưu tiên {order} — Xử lý trung gian", "#E8730C"
+                    tag, color = f"Ưu tiên {order}: Xử lý trung gian", "#E8730C"
                     note = ("Cầu nối truyền dẫn ảnh hưởng. Xử lý sau khi tầng gốc đã chuyển biến "
                             "để tránh lãng phí nguồn lực.")
 
                 items = "".join(
-                    f"<li><b>{codes[i]}</b> — {names[i]} "
+                    f"<li><b>{codes[i]}</b>: {names[i]} "
                     f"<span style='color:#8a93a0'>(w = {S('weights')[i]:.3f}, "
                     f"R+C = {prom[i]:.2f}, {mm['classification'][i]})</span></li>"
                     for i in ids)
@@ -1969,13 +2430,13 @@ Với **{n} rào cản** được phân tích, thuật toán Secretary Bird xác
 **α\\* = {sb['alpha']:.4f}** (CSI = {sb['CSI']:.4f}), giữ lại **{ism_r['n_arrows']} quan hệ ảnh hưởng**
 và cho ra cấu trúc **{ism_r['n_levels']} tầng**.
 
-- **{", ".join(codes[i] for i in root_ids)}** nằm ở tầng đáy — là **nguyên nhân gốc** của hệ thống.
+- **{", ".join(codes[i] for i in root_ids)}** nằm ở tầng đáy, chính là **nguyên nhân gốc** của hệ thống.
 - **{codes[top_imp]}** có độ nổi bật cao nhất (R+C = {prom[top_imp]:.3f}) nhưng thuộc tầng
   {part[top_imp]}; điều này cho thấy *mức độ quan trọng không đồng nghĩa với vị trí căn nguyên*
-  — một kết luận mà nếu chỉ dùng BWM hoặc chỉ dùng DEMATEL sẽ không phát hiện được.
-- Nhóm đòn bẩy chính sách (MICMAC – Độc lập/Dẫn dắt): **{", ".join(leverage) if leverage else "không có"}**.
-- Nhóm cần theo dõi sát vì tính bất ổn (MICMAC – Liên kết): **{", ".join(linkage) if linkage else "không có"}**.
-- Tầng 1 gồm **{", ".join(codes[i] for i in surface_ids)}** — nên dùng làm **chỉ báo kết quả**
+  Đây là kết luận mà nếu chỉ dùng BWM hoặc chỉ dùng DEMATEL sẽ không phát hiện được.
+- Nhóm đòn bẩy chính sách (MICMAC, nhóm Độc lập/Dẫn dắt): **{", ".join(leverage) if leverage else "không có"}**.
+- Nhóm cần theo dõi sát vì tính bất ổn (MICMAC, nhóm Liên kết): **{", ".join(linkage) if linkage else "không có"}**.
+- Tầng 1 gồm **{", ".join(codes[i] for i in surface_ids)}**, nên dùng làm **chỉ báo kết quả**
   để đo hiệu quả của các can thiệp phía dưới.
             """)
 

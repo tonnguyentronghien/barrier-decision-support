@@ -1,6 +1,6 @@
 """
 ================================================================================
-SB-BDI  ·  HE HO TRO RA QUYET DINH PHAN TICH RAO CAN   (file don - app.py)
+SB-BDI  ·  HE HO TRO RA QUYET DINH PHAN TICH RAO CAN DOANH NGHIỆP   (file don - app.py)
 Secretary Bird, Barrier Dependency Interpretation
 --------------------------------------------------------------------------------
 Framework tich hop BWM + DEMATEL + ISM voi nguong cat alpha noi sinh, duoc toi uu
